@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conflict Mirror — See What It Was Actually About</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="grain"></div>
+
+  <main class="container">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="logo-mark">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <circle cx="14" cy="14" r="13" stroke="url(#grad)" stroke-width="1.5"/>
+          <path d="M8 10 Q14 7 20 10 Q14 13 8 10Z" fill="url(#grad)" opacity="0.9"/>
+          <path d="M8 18 Q14 21 20 18 Q14 15 8 18Z" fill="url(#grad)" opacity="0.5"/>
+          <defs>
+            <linearGradient id="grad" x1="0" y1="0" x2="28" y2="28">
+              <stop offset="0%" stop-color="#E8B86D"/>
+              <stop offset="100%" stop-color="#C17D3C"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="header-text">
+        <h1 class="title">Conflict Mirror</h1>
+        <p class="subtitle">Paste any argument. See what it was actually about.</p>
+      </div>
+      <div class="header-badge">AI Analysis</div>
+    </header>
+
+    <!-- API KEY NOTICE -->
+    <div class="api-notice" id="apiNotice">
+      <div class="api-notice-icon">⚙</div>
+      <div class="api-notice-content">
+        <strong>Setup required</strong>
+        <span>Add your Gemini API key in <code>script.js</code> on line 3 to activate analysis.</span>
+      </div>
+      <button class="api-notice-close" onclick="document.getElementById('apiNotice').style.display='none'">✕</button>
+    </div>
+
+    <!-- INPUT CARD -->
+    <section class="card input-card">
+      <div class="card-header">
+        <span class="card-label">Conversation Input</span>
+        <span class="char-counter" id="charCounter">0 / 4000</span>
+      </div>
+
+      <textarea
+        id="conversationInput"
+        class="textarea"
+        maxlength="4000"
+        placeholder="Paste your conversation here — a text exchange, email thread, argument transcript, or any dialogue between two people.
+
+Example:
+Alex: You never listen to me.
+Jordan: I listen, you just repeat yourself constantly.
+Alex: Because you don't hear me the first time!
+Jordan: Maybe if you weren't so dramatic..."
+      ></textarea>
+
+      <div class="input-footer">
+        <div class="error-message" id="errorMessage"></div>
+        <button class="analyze-btn" id="analyzeBtn" onclick="analyzeConversation()">
+          <span class="btn-text">Analyze Conversation</span>
+          <span class="btn-icon">→</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- LOADING STATE -->
+    <div class="loading-state" id="loadingState">
+      <div class="loader-ring">
+        <div class="ring"></div>
+        <div class="ring ring-2"></div>
+      </div>
+      <div class="loading-text">
+        <p class="loading-main" id="loadingMain">Analyzing conversation…</p>
+        <p class="loading-sub" id="loadingSub">Reading between the lines</p>
+      </div>
+    </div>
+
+    <!-- OUTPUT SECTION -->
+    <section class="output-section" id="outputSection">
+
+      <!-- ESCALATION ANALYSIS -->
+      <div class="card output-card" id="escalationCard">
+        <div class="card-header">
+          <div class="card-label-group">
+            <span class="card-icon">📈</span>
+            <span class="card-label">Escalation Analysis</span>
+          </div>
+          <span class="card-tag">Pattern Detected</span>
+        </div>
+        <div class="escalation-content">
+          <p id="escalationText" class="body-text"></p>
+        </div>
+      </div>
+
+      <!-- EMOTIONAL INTENT -->
+      <div class="card output-card" id="emotionsCard">
+        <div class="card-header">
+          <div class="card-label-group">
+            <span class="card-icon">🧠</span>
+            <span class="card-label">Emotional Intent</span>
+          </div>
+          <span class="card-tag">Hidden Needs</span>
+        </div>
+        <div class="emotions-grid">
+          <div class="person-emotions" id="personAEmotions">
+            <div class="person-label" id="personALabel">Person A</div>
+            <div class="emotions-body" id="personAText"></div>
+          </div>
+          <div class="emotions-divider"></div>
+          <div class="person-emotions" id="personBEmotions">
+            <div class="person-label" id="personBLabel">Person B</div>
+            <div class="emotions-body" id="personBText"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAULT DISTRIBUTION -->
+      <div class="card output-card" id="faultCard">
+        <div class="card-header">
+          <div class="card-label-group">
+            <span class="card-icon">⚖️</span>
+            <span class="card-label">Fault Distribution</span>
+          </div>
+          <span class="card-tag">Conflict Share</span>
+        </div>
+        <div class="fault-section">
+          <div class="fault-bar-wrap">
+            <div class="fault-person-name" id="faultNameA">Person A</div>
+            <div class="fault-bar-track">
+              <div class="fault-bar fault-bar-a" id="faultBarA"></div>
+            </div>
+            <div class="fault-pct" id="faultPctA">0%</div>
+          </div>
+          <div class="fault-bar-wrap">
+            <div class="fault-person-name" id="faultNameB">Person B</div>
+            <div class="fault-bar-track">
+              <div class="fault-bar fault-bar-b" id="faultBarB"></div>
+            </div>
+            <div class="fault-pct" id="faultPctB">0%</div>
+          </div>
+          <p class="fault-note" id="faultNote"></p>
+        </div>
+      </div>
+
+      <!-- IMPROVED REWRITE -->
+      <div class="card output-card rewrite-card" id="rewriteCard">
+        <div class="card-header">
+          <div class="card-label-group">
+            <span class="card-icon">✨</span>
+            <span class="card-label">Healthier Rewrite</span>
+          </div>
+          <span class="card-tag">What Could Have Been</span>
+        </div>
+        <div class="rewrite-chat" id="rewriteChat"></div>
+        <div class="rewrite-footer">
+          <span class="rewrite-note">Rewritten using nonviolent communication principles</span>
+          <button class="copy-btn" onclick="copyRewrite()">Copy</button>
+        </div>
+      </div>
+
+      <!-- FOOTER CTA -->
+      <div class="result-footer">
+        <button class="reset-btn" onclick="resetApp()">← Analyze Another Conversation</button>
+        <p class="disclaimer">Analysis generated by AI. For serious conflicts, consider speaking with a professional mediator.</p>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <span>Conflict Mirror</span>
+    <span class="footer-dot">·</span>
+    <span>Built with empathy, powered by AI</span>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
