@@ -5,7 +5,10 @@
 
 const GEMINI_API_KEY = "AIzaSyDBoAuHGp65-TXcFNV0rj8Uefh-rlqYjv0"; // 👈 
 
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`;// ---- LOADING MESSAGES ----
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+
+// ---- LOADING MESSAGES ----
 const LOADING_STEPS = [
   ["Analyzing conversation…",        "Reading between the lines"],
   ["Detecting escalation patterns…", "Tracing where things went wrong"],
