@@ -1,12 +1,12 @@
 // ─────────────────────────────────────────────
-//  CONFLICT MIRROR — CLEAN WORKING VERSION
+//  CONFLICT MIRROR — FINAL STABLE VERSION
 // ─────────────────────────────────────────────
 
-// 🔑 YOUR GEMINI API KEY
+// 🔑 ADD YOUR GEMINI API KEY
 const GEMINI_API_KEY = "AIzaSyDBoAuHGp65-TXcFNV0rj8Uefh-rlqYjv0";
 
-// ✅ CORRECT API ENDPOINT
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+// ✅ LATEST WORKING MODEL + ENDPOINT
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 // ── DOM Elements ──
 const conversationInput = document.getElementById("conversation");
@@ -20,14 +20,22 @@ const emotionsContent = document.getElementById("emotionsContent");
 const faultContent = document.getElementById("faultContent");
 const rewriteContent = document.getElementById("rewriteContent");
 
-// ── Button Click ──
+// ── Event Listener ──
 analyzeBtn.addEventListener("click", handleAnalyze);
 
+// ─────────────────────────────────────────────
+//  MAIN HANDLER
+// ─────────────────────────────────────────────
 async function handleAnalyze() {
   const text = conversationInput.value.trim();
 
   if (!text) {
     showError("Paste a conversation first.");
+    return;
+  }
+
+  if (text.length < 20) {
+    showError("Conversation too short.");
     return;
   }
 
@@ -38,17 +46,31 @@ async function handleAnalyze() {
     const data = await callGemini(text);
     renderResults(data);
   } catch (err) {
-    console.error(err);
-    showError("API error. Check key or connection.");
+    console.error("ERROR:", err);
+    showError(err.message || "Something went wrong.");
   } finally {
     setLoading(false);
   }
 }
 
 // ─────────────────────────────────────────────
-//  GEMINI API CALL (SIMPLIFIED & STABLE)
+//  GEMINI API CALL (ROBUST VERSION)
 // ─────────────────────────────────────────────
 async function callGemini(conversation) {
+  const prompt = `
+Analyze the conversation and respond clearly with:
+
+1. Escalation (how conflict grew)
+2. Emotional intent of both people
+3. Fault percentage (must total 100%)
+4. A better rewritten version
+
+Keep it structured and readable.
+
+Conversation:
+${conversation}
+`;
+
   const response = await fetch(GEMINI_URL, {
     method: "POST",
     headers: {
@@ -57,42 +79,43 @@ async function callGemini(conversation) {
     body: JSON.stringify({
       contents: [
         {
-          parts: [
-            {
-              text: `Analyze this conversation and explain:
-1. What caused escalation
-2. What each person actually felt
-3. Who is more at fault (%)
-4. Rewrite the conversation in a better way
-
-Conversation:
-${conversation}`
-            }
-          ]
+          parts: [{ text: prompt }]
         }
-      ]
+      ],
+      generationConfig: {
+        temperature: 0.5,
+        maxOutputTokens: 800
+      }
     })
   });
 
-  const json = await response.json();
+  const data = await response.json();
 
-  console.log("Gemini response:", json);
+  console.log("Gemini RAW:", data);
 
-  const output = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!response.ok) {
+    throw new Error(data?.error?.message || "API request failed");
+  }
 
-  if (!output) throw new Error("No response from Gemini");
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-  return output;
+  if (!text) {
+    throw new Error("No response from Gemini");
+  }
+
+  return text;
 }
 
 // ─────────────────────────────────────────────
-//  RENDER RESULTS (SIMPLE)
+//  RENDER RESULTS (CLEAN FORMAT)
 // ─────────────────────────────────────────────
 function renderResults(text) {
-  escalationContent.innerHTML = text;
-  emotionsContent.innerHTML = text;
-  faultContent.innerHTML = text;
-  rewriteContent.innerHTML = text;
+  const sections = text.split(/\n\d\.\s/);
+
+  escalationContent.innerHTML = sections[1] || text;
+  emotionsContent.innerHTML = sections[2] || text;
+  faultContent.innerHTML = sections[3] || text;
+  rewriteContent.innerHTML = sections[4] || text;
 
   results.classList.remove("hidden");
 }
